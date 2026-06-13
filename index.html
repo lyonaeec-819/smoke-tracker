@@ -6,206 +6,193 @@
     <title>控烟记录 - 生存模式</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364 ); color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; box-sizing: border-box; }
-        .card { background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); padding: 30px 20px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); width: 100%; max-width: 400px; text-align: center; margin-bottom: 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
-        .timer-title { font-size: 14px; color: #a0aec0; margin-bottom: 8px; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .edit-icon { cursor: pointer; font-size: 14px; opacity: 0.6; transition: opacity 0.2s; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 10px; }
-        .edit-icon:active { opacity: 1; background: rgba(255,255,255,0.2); }
-        .timer-display { font-size: 36px; font-weight: bold; color: #00e676; text-shadow: 0 0 15px rgba(0,230,118,0.5); margin-bottom: 15px; font-family: 'Courier New', Courier, monospace; }
-        .count-display { font-size: 60px; font-weight: bold; margin: 10px 0; line-height: 1; color: #fff; }
+        body { font-family: sans-serif; background: linear-gradient(135deg, #0f2027, #203a43, #2c5364 ); color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; box-sizing: border-box; }
+        .card { background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); padding: 30px 20px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; margin-bottom: 20px; box-sizing: border-box; }
+        .timer-title { font-size: 14px; color: #a0aec0; margin-bottom: 8px; display: flex; justify-content: center; gap: 8px; }
+        .edit-icon { cursor: pointer; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 10px; }
+        .timer-display { font-size: 36px; font-weight: bold; color: #00e676; text-shadow: 0 0 15px rgba(0,230,118,0.5); margin-bottom: 15px; }
+        .count-display { font-size: 60px; font-weight: bold; margin: 10px 0; color: #fff; }
         .count-total { font-size: 24px; color: #718096; }
-        .btn-add { background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; border: none; border-radius: 50px; padding: 18px 40px; font-size: 20px; font-weight: bold; width: 100%; margin-top: 25px; cursor: pointer; box-shadow: 0 8px 20px rgba(255,75,43,0.4); transition: transform 0.1s; }
-        .btn-add:active { transform: scale(0.95); }
-        .btn-new-pack { background: linear-gradient(45deg, #11998e, #38ef7d); color: white; border: none; border-radius: 50px; padding: 18px 40px; font-size: 20px; font-weight: bold; width: 100%; margin-top: 25px; cursor: pointer; box-shadow: 0 8px 20px rgba(56,239,125,0.4); display: none; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
-        .btn-undo { background: none; border: none; color: #718096; margin-top: 15px; font-size: 14px; text-decoration: underline; cursor: pointer; padding: 10px; }
-        .health-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 25px; width: 100%; max-width: 320px; }
-        .health-box { width: 26px; height: 26px; background-color: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
-        .health-box svg { width: 16px; height: 16px; }
-        .history-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 14px; border-radius: 12px; width: 100%; max-width: 400px; font-size: 16px; cursor: pointer; margin-bottom: 10px; backdrop-filter: blur(5px); }
-        .history-container { width: 100%; max-width: 400px; background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.3); padding-bottom: 10px; }
+        .btn { color: white; border: none; border-radius: 50px; padding: 18px 40px; font-size: 20px; font-weight: bold; width: 100%; margin-top: 25px; cursor: pointer; }
+        .btn-add { background: linear-gradient(45deg, #ff416c, #ff4b2b); box-shadow: 0 8px 20px rgba(255,75,43,0.4); }
+        .btn-new { background: linear-gradient(45deg, #11998e, #38ef7d); box-shadow: 0 8px 20px rgba(56,239,125,0.4); display: none; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        .btn-undo { background: none; border: none; color: #718096; margin-top: 15px; text-decoration: underline; cursor: pointer; }
+        .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 25px; }
+        .box { width: 28px; height: 28px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .box.skull { background: rgba(255,75,43,0.15); border-color: rgba(255,75,43,0.3); }
+        .history-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 14px; border-radius: 12px; width: 100%; max-width: 400px; cursor: pointer; margin-bottom: 10px; }
+        .history-container { width: 100%; max-width: 400px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; display: none; padding-bottom: 10px; }
         .chart-wrapper { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .history-item { display: flex; flex-direction: column; padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
-        .history-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
-        .history-date { color: #a0aec0; font-size: 12px; }
-        .green { color: #00e676; text-shadow: 0 0 5px rgba(0,230,118,0.3); } 
-        .red { color: #ff4b2b; text-shadow: 0 0 5px rgba(255,75,43,0.3); }
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.9); color: #000; padding: 12px 24px; border-radius: 30px; font-size: 16px; font-weight: bold; opacity: 0; transition: opacity 0.3s; pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 3000; }
+        .h-item { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; text-align: left; }
+        .h-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .h-date { color: #a0aec0; font-size: 12px; }
+        .green { color: #00e676; } .red { color: #ff4b2b; }
+        .toast { position: fixed; bottom: 80px; background: rgba(255,255,255,0.9); color: #000; padding: 12px 24px; border-radius: 30px; font-weight: bold; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 3000; }
         .toast.show { opacity: 1; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-content { background: #203a43; padding: 25px; border-radius: 20px; width: 85%; max-width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .modal-content h3 { margin-top: 0; color: #fff; margin-bottom: 20px; }
-        .modal-content input { width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 10px; border: none; background: rgba(255,255,255,0.9); font-size: 16px; box-sizing: border-box; outline: none; }
-        .modal-btns { display: flex; justify-content: space-between; gap: 15px; }
-        .modal-btns button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; font-weight: bold; }
-        .btn-cancel { background: rgba(255,255,255,0.1); color: #fff; }
-        .btn-save { background: #00e676; color: #000; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
+        .m-content { background: #203a43; padding: 25px; border-radius: 20px; width: 85%; max-width: 320px; border: 1px solid rgba(255,255,255,0.1); }
+        .m-content h3 { margin-top: 0; color: #fff; }
+        .m-group { text-align: left; margin-bottom: 15px; }
+        .m-group label { display: block; color: #a0aec0; font-size: 14px; margin-bottom: 5px; }
+        .m-content input { width: 100%; padding: 12px; border-radius: 10px; border: none; box-sizing: border-box; }
+        .m-btns { display: flex; gap: 15px; margin-top: 25px; }
+        .m-btns button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
     <div class="card">
-        <div class="timer-title">
-            ⚡ 当前这包烟已存活 ⚡
-            <span class="edit-icon" onclick="openEditTimeModal()">✏️ 修改时间</span>
-        </div>
+        <div class="timer-title">⚡ 当前这包烟已存活 ⚡ <span class="edit-icon" onclick="openModal()">✏️ 修改时间</span></div>
         <div id="timerDisplay" class="timer-display">00:00:00</div>
-        
-        <div class="count-display">
-            <span id="countDisplay">0</span><span class="count-total"> / 20</span>
-        </div>
-        
-        <button id="btnAdd" class="btn-add" onclick="addSmoke()">记录一支 🚬</button>
-        <button id="btnNewPack" class="btn-new-pack" onclick="startNewPack()">🎉 开启新一包</button>
+        <div class="count-display"><span id="countDisplay">0</span><span class="count-total"> / 20</span></div>
+        <button id="btnAdd" class="btn btn-add" onclick="addSmoke()">记录一支 🚬</button>
+        <button id="btnNew" class="btn btn-new" onclick="startNewPack()">🎉 开启新一包</button>
         <button class="btn-undo" onclick="undoSmoke()">点错了，撤销</button>
-
-        <div id="healthGrid" class="health-grid"></div>
+        <div id="grid" class="grid"></div>
     </div>
-
     <button class="history-btn" onclick="toggleHistory()">📊 查看战绩 (存活时间对比)</button>
-    
     <div class="history-container" id="historyContainer">
         <div class="chart-wrapper"><canvas id="trendChart"></canvas></div>
         <div id="historyList"></div>
     </div>
-
     <div id="toast" class="toast"></div>
-
-    <div id="editTimeModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3>修改本包开启时间</h3>
-            <input type="datetime-local" id="newStartTimeInput">
-            <div class="modal-btns">
-                <button class="btn-cancel" onclick="closeEditTimeModal()">取消</button>
-                <button class="btn-save" onclick="saveNewStartTime()">保存</button>
+    <div id="modal" class="modal">
+        <div class="m-content">
+            <h3>修改本包时间</h3>
+            <div class="m-group"><label>开启时间：</label><input type="datetime-local" id="inStart"></div>
+            <div class="m-group" id="endGroup" style="display:none"><label>抽完时间：</label><input type="datetime-local" id="inEnd"></div>
+            <div class="m-btns">
+                <button style="background:rgba(255,255,255,0.1);color:#fff" onclick="closeModal()">取消</button>
+                <button style="background:#00e676;color:#000" onclick="saveTimes()">保存</button>
             </div>
         </div>
     </div>
 
     <script>
-        let trendChart = null; let toastTimeout = null;
-        
-        const personSVG = `<svg viewBox="0 0 320 512" fill="#4fc3f7"><path d="M112 48a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zm40 304V480c0 17.7-14.3 32-32 32s-32-14.3-32-32V256.9L59.4 304.5c-9.1 15.1-28.8 20-43.9 10.9s-20-28.8-10.9-43.9l58.3-97c17.4-28.9 48.6-46.6 82.3-46.6h29.7c33.7 0 64.9 17.7 82.3 46.6l58.3 97c9.1 15.1 4.2 34.8-10.9 43.9s-34.8 4.2-43.9-10.9L232 256.9V480c0 17.7-14.3 32-32 32s-32-14.3-32-32V352H152z"/></svg>`;
-        const skullSVG = `<svg viewBox="0 0 448 512" fill="#ff4b2b"><path d="M439.2 233.7c-10.9-89.1-83.6-158.5-172.5-168.6C165.2 53.8 75.6 124.6 64.8 225.5c-2.3 21.4-1.2 42.6 3.2 63.3l-1.9 1.9c-16.4 16.4-22.3 40.5-15.1 62.3l12.8 38.4c5.9 17.6 22.3 29.3 40.8 29.3H128v16c0 17.7 14.3 32 32 32h16c17.7 0 32-14.3 32-32v-16h32v16c0 17.7 14.3 32 32 32h16c17.7 0 32-14.3 32-32v-16h23.4c18.5 0 34.9-11.7 40.8-29.3l12.8-38.4c7.2-21.8 1.3-45.9-15.1-62.3l-1.9-1.9c4.4-20.7 5.5-41.9 3.2-63.3zM208 208c0-17.7 14.3-32 32-32s32 14.3 32 32-14.3 32-32 32-32-14.3-32-32zm-96 0c0-17.7 14.3-32 32-32s32 14.3 32 32-14.3 32-32 32-32-14.3-32-32z"/></svg>`;
-
-        Chart.defaults.color = '#a0aec0';
-        Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+        let chart=null, toastTimer=null;
+        Chart.defaults.color='#a0aec0'; Chart.defaults.borderColor='rgba(255,255,255,0.05)';
 
         function showToast(msg) {
             const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show');
-            if(toastTimeout) clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => t.classList.remove('show'), 2000);
+            if(toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
         }
 
-        if (!localStorage.getItem('packStart')) {
-            localStorage.setItem('packStart', Date.now());
-            localStorage.setItem('packCount', 0);
-        }
+        if(!localStorage.getItem('pStart')) { localStorage.setItem('pStart', Date.now()); localStorage.setItem('pCount', 0); }
 
-        function getPackData() {
+        function getData() {
             return {
-                start: parseInt(localStorage.getItem('packStart')),
-                count: parseInt(localStorage.getItem('packCount')) || 0,
-                end: localStorage.getItem('packEnd') ? parseInt(localStorage.getItem('packEnd')) : null
+                start: parseInt(localStorage.getItem('pStart')),
+                count: parseInt(localStorage.getItem('pCount')) || 0,
+                end: localStorage.getItem('pEnd') ? parseInt(localStorage.getItem('pEnd')) : null
             };
         }
 
-        function getHistory() { return JSON.parse(localStorage.getItem('packHistory') || '[]'); }
+        function getHist() { return JSON.parse(localStorage.getItem('pHist') || '[]'); }
 
-        function formatDuration(ms) {
-            if (ms < 0) ms = 0;
-            const totalMins = Math.floor(ms / 60000);
-            const d = Math.floor(totalMins / 1440), h = Math.floor((totalMins % 1440) / 60), m = totalMins % 60;
-            if (d > 0) return `${d}天 ${h}小时 ${m}分`;
-            if (h > 0) return `${h}小时 ${m}分`;
-            return `${m}分钟`;
+        function fmtDur(ms) {
+            if(ms<0) ms=0;
+            const m = Math.floor(ms/60000), d = Math.floor(m/1440), h = Math.floor((m%1440)/60), min = m%60;
+            if(d>0) return `${d}天 ${h}小时 ${min}分`;
+            if(h>0) return `${h}小时 ${min}分`;
+            return `${min}分钟`;
         }
 
-        function formatDate(ts) {
+        function fmtDate(ts) {
             const d = new Date(ts);
             return `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
         }
 
         function updateTimer() {
-            const data = getPackData();
+            const data = getData();
             const diff = (data.end || Date.now()) - data.start;
-            document.getElementById('timerDisplay').innerText = formatDuration(diff);
+            document.getElementById('timerDisplay').innerText = fmtDur(diff);
         }
 
-        function openEditTimeModal() {
-            const startTs = parseInt(localStorage.getItem('packStart'));
-            const d = new Date(startTs);
-            const tzOffset = d.getTimezoneOffset() * 60000;
-            const localISOTime = (new Date(d - tzOffset)).toISOString().slice(0, 16);
-            document.getElementById('newStartTimeInput').value = localISOTime;
-            document.getElementById('editTimeModal').style.display = 'flex';
+        function openModal() {
+            const data = getData();
+            const dStart = new Date(data.start);
+            const tz = dStart.getTimezoneOffset() * 60000;
+            document.getElementById('inStart').value = (new Date(dStart - tz)).toISOString().slice(0, 16);
+            
+            const endGroup = document.getElementById('endGroup');
+            if(data.count >= 20 && data.end) {
+                endGroup.style.display = 'block';
+                document.getElementById('inEnd').value = (new Date(new Date(data.end) - tz)).toISOString().slice(0, 16);
+            } else {
+                endGroup.style.display = 'none';
+            }
+            document.getElementById('modal').style.display = 'flex';
         }
 
-        function closeEditTimeModal() {
-            document.getElementById('editTimeModal').style.display = 'none';
-        }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        function saveNewStartTime() {
-            const inputVal = document.getElementById('newStartTimeInput').value;
-            if (!inputVal) return;
-            const newTs = new Date(inputVal).getTime();
-            if (newTs > Date.now()) { showToast("开启时间不能设置在未来哦！"); return; }
-            localStorage.setItem('packStart', newTs);
-            closeEditTimeModal();
-            updateUI();
-            showToast("开启时间已成功修改！");
+        function saveTimes() {
+            const data = getData();
+            const startVal = document.getElementById('inStart').value;
+            if(!startVal) return;
+            const nStart = new Date(startVal).getTime();
+            if(nStart > Date.now()) { showToast("开启时间不能在未来！"); return; }
+            
+            if(data.count >= 20 && data.end) {
+                const endVal = document.getElementById('inEnd').value;
+                if(!endVal) return;
+                const nEnd = new Date(endVal).getTime();
+                if(nEnd > Date.now()) { showToast("抽完时间不能在未来！"); return; }
+                if(nEnd < nStart) { showToast("抽完时间不能早于开启时间！"); return; }
+                localStorage.setItem('pEnd', nEnd);
+            }
+            
+            localStorage.setItem('pStart', nStart);
+            closeModal(); updateUI(); showToast("时间已成功修改！");
         }
 
         function addSmoke() {
-            let data = getPackData();
-            if (data.count < 20) {
-                data.count++; localStorage.setItem('packCount', data.count);
-                if (data.count === 20) { localStorage.setItem('packEnd', Date.now()); showToast("这包烟抽完了！"); } 
+            let data = getData();
+            if(data.count < 20) {
+                data.count++; localStorage.setItem('pCount', data.count);
+                if(data.count === 20) { localStorage.setItem('pEnd', Date.now()); showToast("这包烟抽完了！"); } 
                 else { showToast(`本包第 ${data.count} 支`); }
                 updateUI();
             }
         }
 
         function undoSmoke() {
-            let data = getPackData();
-            if (data.count > 0) {
-                if (data.count === 20) localStorage.removeItem('packEnd');
-                data.count--; localStorage.setItem('packCount', data.count);
+            let data = getData();
+            if(data.count > 0) {
+                if(data.count === 20) localStorage.removeItem('pEnd');
+                data.count--; localStorage.setItem('pCount', data.count);
                 showToast(`已撤销，当前 ${data.count} 支`); updateUI();
             }
         }
 
         function startNewPack() {
-            let data = getPackData(), history = getHistory();
+            let data = getData(), hist = getHist();
             const endTime = data.end || Date.now();
-            history.push({
-                packNum: history.length + 1, start: data.start, end: endTime,
-                durationHours: parseFloat(((endTime - data.start) / 3600000).toFixed(1)),
-                durationText: formatDuration(endTime - data.start)
+            hist.push({
+                num: hist.length + 1, start: data.start, end: endTime,
+                hrs: parseFloat(((endTime - data.start) / 3600000).toFixed(1)),
+                txt: fmtDur(endTime - data.start)
             });
-            localStorage.setItem('packHistory', JSON.stringify(history));
-            localStorage.setItem('packStart', Date.now());
-            localStorage.setItem('packCount', 0);
-            localStorage.removeItem('packEnd');
+            localStorage.setItem('pHist', JSON.stringify(hist));
+            localStorage.setItem('pStart', Date.now());
+            localStorage.setItem('pCount', 0);
+            localStorage.removeItem('pEnd');
             showToast("新的一包开始了，挑战新纪录！"); updateUI();
-            if (document.getElementById('historyContainer').style.display === 'block') renderHistory();
+            if(document.getElementById('historyContainer').style.display === 'block') renderHist();
         }
 
         function updateUI() {
-            const data = getPackData();
+            const data = getData();
             document.getElementById('countDisplay').innerText = data.count;
             document.getElementById('btnAdd').style.display = data.count >= 20 ? 'none' : 'block';
-            document.getElementById('btnNewPack').style.display = data.count >= 20 ? 'block' : 'none';
+            document.getElementById('btnNew').style.display = data.count >= 20 ? 'block' : 'none';
             
-            const grid = document.getElementById('healthGrid'); grid.innerHTML = '';
-            for (let i = 0; i < 20; i++) {
-                const box = document.createElement('div'); box.className = 'health-box';
-                if (i < data.count) { 
-                    box.innerHTML = skullSVG; 
-                    box.style.backgroundColor = 'rgba(255, 75, 43, 0.15)'; 
-                    box.style.borderColor = 'rgba(255, 75, 43, 0.3)'; 
-                    box.style.boxShadow = 'inset 0 0 10px rgba(255, 75, 43, 0.2)';
-                } else { box.innerHTML = personSVG; }
+            const grid = document.getElementById('grid'); grid.innerHTML = '';
+            for(let i=0; i<20; i++) {
+                const box = document.createElement('div');
+                if(i < data.count) { box.className = 'box skull'; box.innerText = '💀'; } 
+                else { box.className = 'box'; box.innerText = '👤'; }
                 grid.appendChild(box);
             }
             updateTimer();
@@ -214,43 +201,38 @@
         function toggleHistory() {
             const c = document.getElementById('historyContainer');
             c.style.display = c.style.display === 'block' ? 'none' : 'block';
-            if(c.style.display === 'block') renderHistory();
+            if(c.style.display === 'block') renderHist();
         }
 
-        function renderHistory() {
-            const history = getHistory(), list = document.getElementById('historyList');
-            if (history.length === 0) { list.innerHTML = '<div class="history-item" style="align-items:center; color:#718096;">暂无战绩，抽完第一包后解锁</div>'; return; }
+        function renderHist() {
+            const hist = getHist(), list = document.getElementById('historyList');
+            if(hist.length === 0) { list.innerHTML = '<div class="h-item" style="text-align:center; color:#718096;">暂无战绩，抽完第一包后解锁</div>'; return; }
             
-            const recent = history.slice(-20), labels = recent.map(h => `第${h.packNum}包`), data = recent.map(h => h.durationHours);
+            const recent = hist.slice(-20), labels = recent.map(h => `第${h.num}包`), data = recent.map(h => h.hrs);
             const bgColors = data.map(h => h >= 24 ? '#00e676' : '#ff4b2b');
 
             const ctx = document.getElementById('trendChart').getContext('2d');
-            if (trendChart) { 
-                trendChart.data.labels = labels; 
-                trendChart.data.datasets[0].data = data; 
-                trendChart.data.datasets[0].backgroundColor = bgColors; 
-                trendChart.update(); 
-            } else {
-                trendChart = new Chart(ctx, {
-                    type: 'bar', 
-                    data: { labels, datasets: [{ label: '存活时间(小时)', data, backgroundColor: bgColors, borderRadius: 4 }] },
+            if(chart) { chart.data.labels = labels; chart.data.datasets[0].data = data; chart.data.datasets[0].backgroundColor = bgColors; chart.update(); } 
+            else {
+                chart = new Chart(ctx, {
+                    type: 'bar', data: { labels, datasets: [{ label: '存活时间(小时)', data, backgroundColor: bgColors, borderRadius: 4 }] },
                     options: { responsive: true, scales: { y: { beginAtZero: true, title: { display: true, text: '坚持小时数 (越高越好)' } } }, plugins: { legend: { display: false } } }
                 });
             }
 
             list.innerHTML = '';
-            [...history].reverse().forEach(h => {
-                const isGreen = h.durationHours >= 24, color = isGreen ? 'green' : 'red', icon = isGreen ? '🏆' : '💀';
-                list.innerHTML += `<div class="history-item">
-                    <div class="history-header"><span style="font-weight:bold; color:#fff;">第 ${h.packNum} 包 ${icon}</span><span style="font-weight:bold;" class="${color}">${h.durationText}</span></div>
-                    <div class="history-date">起: ${formatDate(h.start)} &nbsp;|&nbsp; 止: ${formatDate(h.end)}</div>
+            [...hist].reverse().forEach(h => {
+                const isG = h.hrs >= 24, color = isG ? 'green' : 'red', icon = isG ? '🏆' : '💀';
+                list.innerHTML += `<div class="h-item">
+                    <div class="h-header"><span style="font-weight:bold; color:#fff;">第 ${h.num} 包 ${icon}</span><span style="font-weight:bold;" class="${color}">${h.txt}</span></div>
+                    <div class="h-date">起: ${fmtDate(h.start)} &nbsp;|&nbsp; 止: ${fmtDate(h.end)}</div>
                 </div>`;
             });
         }
 
         updateUI();
         setInterval(updateTimer, 60000);
-        document.addEventListener("visibilitychange", () => { if (!document.hidden) { updateUI(); if (document.getElementById('historyContainer').style.display === 'block') renderHistory(); } });
+        document.addEventListener("visibilitychange", () => { if(!document.hidden) { updateUI(); if(document.getElementById('historyContainer').style.display === 'block') renderHist(); } });
     </script>
 </body>
 </html>
