@@ -21,8 +21,15 @@
         .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 25px; }
         .box { width: 28px; height: 28px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
         .box.skull { background: rgba(255,75,43,0.15); border-color: rgba(255,75,43,0.3); }
+        
         .history-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 14px; border-radius: 12px; width: 100%; max-width: 400px; cursor: pointer; margin-bottom: 10px; }
-        .history-container { width: 100%; max-width: 400px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; display: none; padding-bottom: 10px; }
+        .history-container { width: 100%; max-width: 400px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; display: none; padding-bottom: 10px; margin-bottom: 10px; }
+        
+        .stat-grid { display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; }
+        .stat-box { flex: 1 1 40%; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-val { font-size: 24px; font-weight: bold; color: #00e676; margin-bottom: 5px; }
+        .stat-label { font-size: 12px; color: #a0aec0; }
+
         .chart-wrapper { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .h-item { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; text-align: left; }
         .h-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
@@ -38,6 +45,14 @@
         .m-content input { width: 100%; padding: 12px; border-radius: 10px; border: none; box-sizing: border-box; }
         .m-btns { display: flex; gap: 15px; margin-top: 25px; }
         .m-btns button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        
+        /* 备份区域样式 */
+        .backup-area { padding: 15px; text-align: left; }
+        .backup-tip { font-size: 12px; color: #a0aec0; margin-top: 0; margin-bottom: 10px; line-height: 1.5; }
+        .backup-text { width: 100%; height: 80px; background: rgba(255,255,255,0.9); border-radius: 8px; padding: 10px; box-sizing: border-box; margin-bottom: 15px; font-family: monospace; font-size: 12px; border: none; outline: none; resize: none; }
+        .backup-btns { display: flex; gap: 10px; }
+        .btn-copy { flex: 1; padding: 12px; border-radius: 8px; border: none; background: #4fc3f7; font-weight: bold; cursor: pointer; color: #000; }
+        .btn-restore { flex: 1; padding: 12px; border-radius: 8px; border: none; background: #ff4b2b; color: white; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -50,11 +65,37 @@
         <button class="btn-undo" onclick="undoSmoke()">点错了，撤销</button>
         <div id="grid" class="grid"></div>
     </div>
-    <button class="history-btn" onclick="toggleHistory()">📊 查看战绩 (存活时间对比)</button>
+
+    <button class="history-btn" onclick="toggleStats()">📈 整体数据总览 (平均统计)</button>
+    <div class="history-container" id="statsContainer">
+        <div class="stat-grid">
+            <div class="stat-box"><div class="stat-val" id="statDays">0</div><div class="stat-label">记录总天数</div></div>
+            <div class="stat-box"><div class="stat-val" id="statTotalPacks">0</div><div class="stat-label">累计抽烟(包)</div></div>
+            <div class="stat-box"><div class="stat-val" id="statAvgPacks">0</div><div class="stat-label">平均每天(包)</div></div>
+            <div class="stat-box"><div class="stat-val" id="statAvgCigs">0</div><div class="stat-label">平均每天(支)</div></div>
+        </div>
+    </div>
+
+    <button class="history-btn" onclick="toggleHistory()">📊 查看战绩 (近30包存活时间)</button>
     <div class="history-container" id="historyContainer">
         <div class="chart-wrapper"><canvas id="trendChart"></canvas></div>
         <div id="historyList"></div>
     </div>
+
+    <!-- 新增：数据备份与恢复面板 -->
+    <button class="history-btn" onclick="toggleBackup()">⚙️ 数据备份与恢复</button>
+    <div class="history-container" id="backupContainer">
+        <div class="backup-area">
+            <p class="backup-tip">💡 <b>备份：</b>点击“复制备份”，将代码粘贴到手机备忘录保存。  
+💡 <b>恢复：</b>换手机时，将备忘录的代码粘贴到下方框内，点击“恢复数据”。</p>
+            <textarea id="backupText" class="backup-text" placeholder="这里会显示你的备份代码，或者在此粘贴代码以恢复数据..."></textarea>
+            <div class="backup-btns">
+                <button class="btn-copy" onclick="copyBackup()">📋 复制备份</button>
+                <button class="btn-restore" onclick="restoreBackup()">🔄 恢复数据</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast"></div>
     <div id="modal" class="modal">
         <div class="m-content">
@@ -78,7 +119,16 @@
             toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
         }
 
-        if(!localStorage.getItem('pStart')) { localStorage.setItem('pStart', Date.now()); localStorage.setItem('pCount', 0); }
+        // 初始化基础数据
+        if(!localStorage.getItem('pStart')) { 
+            localStorage.setItem('pStart', Date.now()); 
+            localStorage.setItem('pCount', 0); 
+        }
+        if(!localStorage.getItem('firstUseDate')) {
+            const hist = getHist();
+            if(hist.length > 0) localStorage.setItem('firstUseDate', hist[0].start);
+            else localStorage.setItem('firstUseDate', localStorage.getItem('pStart'));
+        }
 
         function getData() {
             return {
@@ -144,6 +194,9 @@
             }
             
             localStorage.setItem('pStart', nStart);
+            const hist = getHist();
+            if(hist.length === 0) localStorage.setItem('firstUseDate', nStart);
+            
             closeModal(); updateUI(); showToast("时间已成功修改！");
         }
 
@@ -196,6 +249,31 @@
                 grid.appendChild(box);
             }
             updateTimer();
+            if(document.getElementById('statsContainer').style.display === 'block') renderStats();
+        }
+
+        function toggleStats() {
+            const c = document.getElementById('statsContainer');
+            c.style.display = c.style.display === 'block' ? 'none' : 'block';
+            if(c.style.display === 'block') renderStats();
+        }
+
+        function renderStats() {
+            const hist = getHist();
+            const data = getData();
+            const firstUse = parseInt(localStorage.getItem('firstUseDate')) || data.start;
+            const now = Date.now();
+            
+            let days = (now - firstUse) / (1000 * 60 * 60 * 24);
+            if (days < 1) days = 1; 
+            
+            const totalPacks = hist.length + (data.count / 20);
+            const totalCigs = (hist.length * 20) + data.count;
+            
+            document.getElementById('statDays').innerText = Math.ceil(days);
+            document.getElementById('statTotalPacks').innerText = totalPacks.toFixed(1);
+            document.getElementById('statAvgPacks').innerText = (totalPacks / days).toFixed(2);
+            document.getElementById('statAvgCigs').innerText = Math.round(totalCigs / days);
         }
 
         function toggleHistory() {
@@ -208,7 +286,7 @@
             const hist = getHist(), list = document.getElementById('historyList');
             if(hist.length === 0) { list.innerHTML = '<div class="h-item" style="text-align:center; color:#718096;">暂无战绩，抽完第一包后解锁</div>'; return; }
             
-            const recent = hist.slice(-20), labels = recent.map(h => `第${h.num}包`), data = recent.map(h => h.hrs);
+            const recent = hist.slice(-30), labels = recent.map(h => `第${h.num}包`), data = recent.map(h => h.hrs);
             const bgColors = data.map(h => h >= 24 ? '#00e676' : '#ff4b2b');
 
             const ctx = document.getElementById('trendChart').getContext('2d');
@@ -230,9 +308,64 @@
             });
         }
 
+        // 新增：备份与恢复逻辑
+        function toggleBackup() {
+            const c = document.getElementById('backupContainer');
+            c.style.display = c.style.display === 'block' ? 'none' : 'block';
+            if(c.style.display === 'block') {
+                const backupData = {
+                    pStart: localStorage.getItem('pStart'),
+                    pCount: localStorage.getItem('pCount'),
+                    pEnd: localStorage.getItem('pEnd'),
+                    pHist: localStorage.getItem('pHist'),
+                    firstUseDate: localStorage.getItem('firstUseDate')
+                };
+                // 将数据加密成一串乱码，防止复制时格式错乱
+                const code = btoa(encodeURIComponent(JSON.stringify(backupData)));
+                document.getElementById('backupText').value = code;
+            }
+        }
+
+        function copyBackup() {
+            const txt = document.getElementById('backupText');
+            txt.select();
+            try {
+                document.execCommand('copy');
+                showToast("✅ 备份代码已复制！请粘贴到备忘录保存");
+            } catch(e) {
+                showToast("❌ 复制失败，请手动长按全选复制");
+            }
+        }
+
+        function restoreBackup() {
+            const code = document.getElementById('backupText').value.trim();
+            if(!code) { showToast("⚠️ 请先粘贴备份代码"); return; }
+            try {
+                // 解密并恢复数据
+                const data = JSON.parse(decodeURIComponent(atob(code)));
+                if(data.pStart) localStorage.setItem('pStart', data.pStart);
+                if(data.pCount) localStorage.setItem('pCount', data.pCount);
+                if(data.pEnd) localStorage.setItem('pEnd', data.pEnd); else localStorage.removeItem('pEnd');
+                if(data.pHist) localStorage.setItem('pHist', data.pHist);
+                if(data.firstUseDate) localStorage.setItem('firstUseDate', data.firstUseDate);
+                
+                showToast("🎉 数据恢复成功！");
+                updateUI();
+                if(document.getElementById('statsContainer').style.display === 'block') renderStats();
+                if(document.getElementById('historyContainer').style.display === 'block') renderHist();
+            } catch(e) {
+                showToast("❌ 恢复失败：代码格式错误");
+            }
+        }
+
         updateUI();
         setInterval(updateTimer, 60000);
-        document.addEventListener("visibilitychange", () => { if(!document.hidden) { updateUI(); if(document.getElementById('historyContainer').style.display === 'block') renderHist(); } });
+        document.addEventListener("visibilitychange", () => { 
+            if(!document.hidden) { 
+                updateUI(); 
+                if(document.getElementById('historyContainer').style.display === 'block') renderHist(); 
+            } 
+        });
     </script>
 </body>
 </html>
